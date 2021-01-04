@@ -8,6 +8,7 @@ from os import environ
 
 import mock
 import psutil
+import pymysql
 import pytest
 from pkg_resources import parse_version
 
@@ -351,6 +352,70 @@ def test_replication_check_status(slave_io_running, slave_sql_running, check_sta
     mysql_check._check_replication_status(mocked_results)
 
     aggregator.assert_service_check('mysql.replication.slave_running', check_status, tags=['foo:bar'], count=1)
+
+
+def test__get_runtime_tags():
+    mysql_check = MySql(common.CHECK_NAME, {}, instances=[{'server': 'localhost', 'user': 'datadog'}])
+
+    class MockCursor:
+        def __init__(self, role):
+            self.role = role
+
+        def __call__(self, *args, **kwargs):
+            return self
+
+        def execute(self, command):
+            pass
+
+        def close(self):
+            return MockCursor()
+
+        def fetchone(self):
+            return self.role
+
+    class MockCursorWithError(MockCursor):
+        def __init__(self, err):
+            self.err = err
+
+        def fetchone(self):
+            raise self.err
+
+    class MockDatabase:
+        def __init__(self, cursor):
+            self.cursor = cursor
+
+        def cursor(self):
+            return self.cursor
+
+    reader_row = ('reader',)
+    writer_row = ('writer',)
+
+    tags = mysql_check._get_runtime_tags(MockDatabase(MockCursor(reader_row)))
+    assert tags == ['replication_role:reader']
+
+    tags = mysql_check._get_runtime_tags(MockDatabase(MockCursor(writer_row)))
+    assert tags == ['replication_role:writer']
+
+    tags = mysql_check._get_runtime_tags(MockDatabase(MockCursor((1, 'reader'))))
+    assert tags == []
+
+    # Error cases for non-aurora databases; any error should be caught and not fail the check
+
+    tags = mysql_check._get_runtime_tags(
+        MockDatabase(
+            MockCursorWithError(pymysql.err.InternalError(pymysql.constants.ER.UNKNOWN_TABLE, 'Unknown Table'))
+        )
+    )
+    assert tags == []
+
+    tags = mysql_check._get_runtime_tags(
+        MockDatabase(
+            MockCursorWithError(
+                pymysql.err.ProgrammingError(pymysql.constants.ER.DBACCESS_DENIED_ERROR, 'Access Denied')
+            )
+        )
+    )
+    assert tags == []
 
 
 @pytest.mark.integration
