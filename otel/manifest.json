@@ -2,7 +2,7 @@
   "display_name": "OTel",
   "maintainer": "help@datadoghq.com",
   "manifest_version": "1.0.0",
-  "name": "OTel",
+  "name": "opentelemetry",
   "metric_prefix": "otel.",
   "metric_to_check": [
     "otel.datadog_exporter.metrics.running",
