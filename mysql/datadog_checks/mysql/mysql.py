@@ -112,15 +112,12 @@ class MySql(AgentCheck):
                 self._send_metadata()
 
                 # Metric collection
-<<<<<<< HEAD
                 self._collect_metrics(db)
                 self._collect_system_metrics(self.config.host, db, self.config.tags)
-=======
                 self._collect_metrics(
                     db, tags, self.config.options, self.config.queries, self.config.max_custom_queries
                 )
                 self._collect_system_metrics(self.config.host, db, tags)
->>>>>>> Lazy load the _is_aurora field and build tags during the check run
                 if self.config.deep_database_monitoring:
                     self._collect_statement_metrics(db, tags)
 
