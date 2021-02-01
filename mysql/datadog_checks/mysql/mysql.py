@@ -112,11 +112,7 @@ class MySql(AgentCheck):
                 self._send_metadata()
 
                 # Metric collection
-                self._collect_metrics(db)
-                self._collect_system_metrics(self.config.host, db, self.config.tags)
-                self._collect_metrics(
-                    db, tags, self.config.options, self.config.queries, self.config.max_custom_queries
-                )
+                self._collect_metrics(db, tags=tags)
                 self._collect_system_metrics(self.config.host, db, tags)
                 if self.config.deep_database_monitoring:
                     self._collect_statement_metrics(db, tags)
@@ -205,7 +201,7 @@ class MySql(AgentCheck):
             if db:
                 db.close()
 
-    def _collect_metrics(self, db):
+    def _collect_metrics(self, db, tags):
 
         # Get aggregate of all VARS we want to collect
         metrics = STATUS_VARS
@@ -299,13 +295,13 @@ class MySql(AgentCheck):
             if src in results:
                 results[dst] = results[src]
 
-        self._submit_metrics(metrics, results, self.config.tags)
+        self._submit_metrics(metrics, results, tags)
 
         # Collect custom query metrics
         # Max of 20 queries allowed
         if isinstance(self.config.queries, list):
             for check in self.config.queries[: self.config.max_custom_queries]:
-                total_tags = self.config.tags + check.get('tags', [])
+                total_tags = tags + check.get('tags', [])
                 self._collect_dict(
                     check['type'], {check['field']: check['metric']}, check['query'], db, tags=total_tags
                 )
