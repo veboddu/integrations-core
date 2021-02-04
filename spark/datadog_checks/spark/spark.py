@@ -474,9 +474,12 @@ class SparkCheck(AgentCheck):
             try:
                 if not version_set:
                     version_set = self._collect_version(tracking_url, tags)
-                response = self._rest_request_to_json(tracking_url, SPARK_APPS_PATH, SPARK_SERVICE_CHECK, tags)
+                response = self._try_rest_request_to_json(tracking_url, SPARK_APPS_PATH, SPARK_SERVICE_CHECK, tags)
             except RequestException as e:
                 self.log.warning("Exception happened when fetching app ids for %s: %s", tracking_url, e)
+                continue
+            except JSONDecodeError as e:
+                self.log.warning("Unable to decode JSON when fetching app ids for %s: %s", tracking_url, e)
                 continue
 
             for app in response:
@@ -749,6 +752,12 @@ class SparkCheck(AgentCheck):
         """
         Query the given URL and return the JSON response
         """
+        try:
+            self._try_rest_request_to_json(address, object_path, service_name, tags, *args, **kwargs)
+        except JSONDecodeError:
+            raise
+
+    def _try_rest_request_to_json(self, address, object_path, service_name, tags, *args, **kwargs):
         response = self._rest_request(address, object_path, service_name, tags, *args, **kwargs)
 
         try:
@@ -761,7 +770,6 @@ class SparkCheck(AgentCheck):
                 tags=['url:%s' % self._get_url_base(address)] + tags,
                 message='JSON Parse failed: {0}'.format(e),
             )
-            raise
 
         return response_json
 
