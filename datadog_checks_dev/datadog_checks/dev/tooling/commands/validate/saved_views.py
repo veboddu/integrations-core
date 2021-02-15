@@ -34,6 +34,7 @@ ANALYTICS_OPTIONS = {"aggregations", "group_bys", "limit", "order", "step_ms", "
 
 PROCESS_OPTIONS = {"sort", "graph_options", "view_options", "filter", "selected_top_graph", "enabled_columns"}
 
+
 @click.command(context_settings=CONTEXT_SETTINGS, short_help='Validate saved view files')
 @click.argument('integration', autocompletion=complete_valid_checks, required=False)
 def saved_views(integration):
