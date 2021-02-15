@@ -3,9 +3,6 @@
     "type": "process",
     "page": "process_overview",
     "query": "Filter by: integration:apache",
-    "timerange": {
-        "interval_ms": 0
-    },
     "options": {
         "sort": {
             "order": "DESC",
