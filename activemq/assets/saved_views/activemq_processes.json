@@ -2,7 +2,7 @@
     "name": "activemq",
     "type": "process",
     "page": "process_overview",
-    "query_label": "",
+    "query": "",
     "timerange": {
         "interval_ms": 0
     },
