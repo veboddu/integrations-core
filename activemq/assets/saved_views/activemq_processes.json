@@ -2,7 +2,7 @@
     "name": "activemq",
     "type": "process",
     "page": "process_overview",
-    "query": "",
+    "query": "Filter by: integration:activemq",
     "timerange": {
         "interval_ms": 0
     },
